@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>ListApp</title>
+  <link rel="stylesheet" href="https://d10ajoocuyu32n.cloudfront.net/mobile/1.3.1/jquery.mobile-1.3.1.min.css">
+  
+  <!-- Extra Codiqa features -->
+  <link rel="stylesheet" href="codiqa.ext.css">
+  
+  <link rel="stylesheet" href="https://codiqa.com/view/551d71ab/css">
+  
+  <!-- jQuery and jQuery Mobile -->
+  <script src="https://d10ajoocuyu32n.cloudfront.net/jquery-1.9.1.min.js"></script>
+  <script src="https://d10ajoocuyu32n.cloudfront.net/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+
+  <!-- Extra Codiqa features -->
+  <script src="https://d10ajoocuyu32n.cloudfront.net/codiqa.ext.js"></script>
+   
+  <script src="https://codiqa.com/view/551d71ab/js"></script>
+  
+  <!-- Apigee connection -->
+<script src="https://apigee.com/usergrid/sdk/usergrid.0.10.5.js"></script>
+<script type="text/javascript">
+
+
+// Define a connection to the server
+var client = new Usergrid.Client({orgName:'smwen', appName:'sandbox'});
+// Reading data -- add qs or ql for additional params
+var books = new Usergrid.Collection({ "client":client, "type":"books", "qs":{"limit":10, "ql":"select * order by created desc"} });
+
+$(document).ready(function() {
+    // click on create button -- cannot bind until JQuery is loaded
+    $('#create-button').bind('click',createBook);
+    loadBooks();
+});
+
+function loadBooks() {
+    // network call, do asynchronously
+    books.fetch(
+        function() { // Success callback
+
+            // empty the list
+            $('#books-list').empty();
+            while(books.hasNextEntity()) {
+                  var book = books.getNextEntity();
+                   $('#books-list').append('<li><h3>' + book.get('title')+'</h3><p>' + book.get('author') + '</p></li>');
+
+                   // Re-apply jQuery Mobile styles
+                   $('#books-list').listview('refresh');
+                }
+        }, 
+
+        function() { // Failure callback
+                    alert("read failed");
+                }
+            );
+}
+
+function createBook() {
+    // create JSON object
+    var bookCreated = { "title":$('#input-title').val(),
+                        "author":$('#input-author').val()};
+     books.addEntity(bookCreated, function (error, response) {
+              if (error) { alert("write failed");
+              } else { 
+                    // alert("write succeeded"); 
+
+                    // clear form
+                    $('#input-title').val = "";
+                    $('#input-author').val = "";
+
+                    // load new data
+                    loadBooks();
+
+                    // close dialog - Javascript
+                    history.back();
+                } 
+     });
+}
+
+        </script>
+
+</head>
+<body>
+  <!-- Home -->
+  <div data-role="page" id="page1">
+      <div data-theme="b" data-role="header">
+          <a data-role="button" href="#page2" data-rel="dialog" data-icon="plus" data-iconpos="right"
+          class="ui-btn-right">
+              Add
+          </a>
+          <h3>
+              My Books
+          </h3>
+      </div>
+      <div data-role="content">
+          <ul id = "books-list" data-role="listview" data-divider-theme="b" data-inset="false">
+              <li>
+                  <h3>First Title</h3>
+		  <p>First Author</p>
+              </li>
+              <li>
+                  <h3>Second Title</h3>
+		  <p>Second Author</p>
+              </li>
+          </ul>
+      </div>
+  </div>
+
+  <!-- AddBook -->
+  <div data-role="page" id="page2">
+      <div data-theme="b" data-role="header">
+          <h3>
+              Add a New Book
+          </h3>
+      </div>
+      <div data-role="content">
+          <form action="" id="#input_form">
+              <div data-role="fieldcontain">
+                  <label for="textinput2">
+                      Title
+                  </label>
+                  <input name="" id="input-title" placeholder="" value="" type="text">
+              </div>
+              <div data-role="fieldcontain">
+                  <label for="textinput3">
+                      Author
+                  </label>
+                  <input name="" id="input-author" placeholder="" value="" type="text">
+              </div>
+          </form>
+<!-- Don't use href, use history API so that you always know previous page-->
+<!-- or use JQuery Mobile dialog close function-->
+                <a href="#page1" data-role="button" data-theme="c" data-inline="true">Cancel</a>
+                <button id="create-button" data-inline="true">Create</button>
+      </div>
+  </div>
+
+</body>
+</html>
